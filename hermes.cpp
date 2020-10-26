@@ -20,7 +20,7 @@ int countI;
 int countII;
 int countIII;
 int countIV;
-vector<string> input;
+vector<int> input;
 int initnodex;
 int initnodey;
 fstream tempscript;
@@ -78,6 +78,7 @@ int main() {
 			}
 		}
 	}
+	cout << "Done." << endl;
 	while (island != ".") {
 		cin >> island;
 		if (island == ":q") {
@@ -118,7 +119,11 @@ int main() {
 		}
 		else {
 			if (count(dictionary.begin(), dictionary.end(), island)) {
-				input.push_back(island);
+				for (countI = 0; countI < dictionary.size(); countI++) {
+					if (dictionary[countI] == island) {
+						input.push_back(countI);
+					}
+				}
 			}
 			else {
 				dictionary.push_back(island);
@@ -205,7 +210,11 @@ int main() {
 					}
 					else {
 						if (count(dictionary.begin(), dictionary.end(), island)) {
-							input.push_back(island);
+							for (countI = 0; countI < dictionary.size(); countI++) {
+								if (dictionary[countI] == island) {
+									input.push_back(countI);
+								}
+							}
 						}
 						else {
 							dictionary.push_back(island);
@@ -219,8 +228,8 @@ int main() {
 		}
 		for (countI = 0; countI < netwidth; countI++) {
 			for (countII = 0; countII < netlength; countII++) {
-				for (countIII = 0; countIII < output.size(); countIII++) {
-					if (connectiontable[nodex][nodey][countI][countII] == output[countIII]) {
+				for (countIII = 0; countIII < input.size(); countIII++) {
+					if (connectiontable[nodex][nodey][countI][countII] == input[countIII]) {
 						possiblesx.push_back(countI);
 						possiblesy.push_back(countII);
 					}
