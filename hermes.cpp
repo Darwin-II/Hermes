@@ -130,7 +130,6 @@ int main() {
 			}
 		}
 	}
-	input.erase(input.begin() + input.size());
 	initnodex = (rand () % (netwidth)) + 0;
 	initnodey = (rand () % (netlength)) + 0;
 	nodex = initnodex;
@@ -221,7 +220,6 @@ int main() {
 						}
 					}
 				}
-				input.erase(input.begin() + input.size());
 				break;
 			default:
 				break;
