@@ -5,7 +5,7 @@
 //source node (random) - grab a random word
 //wipe node - wipe a node and replace it with a new one, then send a signal to it
 //output node - outputs
-//TODO - S2 CONVERTED TO 4D, S5 TOO, CHANGE NODE FLOW SYSTEM TOO
+//TODO - learning system for output control (separate AI that converts thoughts into useable sentences (classic neural net made with Q-learning)
 #include <iostream>
 #include <vector>
 #include <ctime>
@@ -16,15 +16,16 @@ int netlength;
 int netwidth;
 string island;
 string islandII;
-long int countI;
-long int countII;
-long int countIII;
-long int countIV;
+int countI;
+int countII;
+int countIII;
+int countIV;
 vector<string> input;
 int initnodex;
 int initnodey;
 fstream tempscript;
 fstream dictionaryfile;
+fstream file;
 vector<string> dictionary;
 int newconnection;
 int targetnodex;
@@ -44,53 +45,74 @@ int main() {
 		dictionary.push_back(island);
 	}
 	dictionaryfile.close();
-	cout << "Enter net length: ";
-	cin >> netlength;
-	cout << "Enter net width: ";
-	cin >> netwidth;
-	cout << "Generating net";
-	vector<vector<int>>nodetable(netlength, vector<int>(netwidth));
-	int nodedata[netlength][netwidth];
-	cout << ".";
+	cout << "Gathering net dimensions." << endl;
+	file.open("netx.txt");
+	file >> island;
+	netwidth = stoi(island);
+	file.close();
+	file.open("nety.txt");
+	file >> island;
+	netlength = stoi(island);
+	file.close();
+	int nodetable[netwidth][netlength];
+	vector<vector<int>> nodedata (netwidth, vector<int>(netlength));
+	vector<vector<vector<vector<int>>>> connectiontable (netwidth, vector<vector<vector<int>>> (netlength, vector<vector<int>> (netwidth, vector<int> (netlength))));
+	cout << "Loading net." << endl;
+	file.open("nodes.txt");
 	for (countI = 0; countI < netwidth; countI++) {
 		for (countII = 0; countII < netlength; countII++) {
-			nodetable[countI][countII] = (rand () % 6 ) + 1;
-			switch (nodetable[countI][countII]) {
-				case 3:
-					nodedata[countI][countII] = (rand () % dictionary.size()) + 0;
-			}
+			getline(file, island);
+			nodetable[countI][countII] = stoi(island);
 		}
 	}
-	cout << ".";
-	vector<vector<vector<vector<int>>>> connectiontable(netwidth, vector<vector<vector<int>>> (netlength, vector<vector<int>> (netwidth, vector<int>(netlength))));
+	file.close();
+	cout << "Loading synapses." << endl;
+	file.open("synapses.txt");
 	for (countI = 0; countI < netwidth; countI++) {
 		for (countII = 0; countII < netlength; countII++) {
 			for (countIII = 0; countIII < netwidth; countIII++) {
 				for (countIV = 0; countIV < netlength; countIV++) {
-					connectiontable[countI][countII][countIII][countIV] = (rand () % dictionary.size()) + 0;
+					getline(file, island);
+					connectiontable[countI][countII][countIII][countIV] = stoi(island);
 				}
 			}
-		}
-	}
-	cout << "." << endl;
-	cout << "Total nodes: " << (netwidth * netlength) << endl;
-	cout << "Show net? [yes / no] ";
-	cin >> island;
-	if (island == "yes") {
-		for (countI = 0; countI < netwidth; countI++) {
-			for (countII = 0; countII < netlength; countII++) {
-				cout << " " << nodetable[countI][countII] << " ";
-			}
-			cout << endl;
 		}
 	}
 	while (island != ".") {
 		cin >> island;
 		if (island == ":q") {
+			cout << "Unloading language." << endl;
 			dictionaryfile.open("dictionary.txt");
 			for (countI = 0; countI < dictionary.size(); countI++) {
 				dictionaryfile << dictionary[countI] << endl;
 			}
+			dictionaryfile.close();
+			cout << "Unloading net dimensions." << endl;
+			file.open("netx.txt");
+			file << netwidth;
+			file.close();
+			file.open("nety.txt");
+			file << netlength;
+			file.close();
+			cout << "Unloading net." << endl;
+			file.open("nodes.txt");
+			for (countI = 0; countI < netwidth; countI++) {
+				for (countII = 0; countII < netlength; countII++) {
+					file << nodetable[countI][countII] << endl;
+				}
+			}
+			file.close();
+			file.open("synapses.txt");
+			for (countI = 0; countI < netwidth; countI++) {
+				for (countII = 0; countII < netlength; countII++) {
+					for (countIII = 0; countIII < netwidth; countIII++) {
+						for (countIV = 0; countIV < netlength; countIV++) {
+							file << connectiontable[countI][countII][countIII][countIV] << endl;
+						}
+					}
+				}			
+			}
+			file.close();
 			cout << "Goodbye." << endl;
 			return 0;
 		}
@@ -146,10 +168,38 @@ int main() {
 				while (island != ".") {
 					cin >> island;
 					if (island == ":q") {
+						cout << "Unloading language." << endl;
 						dictionaryfile.open("dictionary.txt");
 						for (countI = 0; countI < dictionary.size(); countI++) {
 							dictionaryfile << dictionary[countI] << endl;
 						}
+						dictionaryfile.close();
+						cout << "Unloading net dimensions." << endl;
+						file.open("netx.txt");
+						file << netwidth;
+						file.close();
+						file.open("nety.txt");
+						file << netlength;
+						file.close();
+						cout << "Unloading net." << endl;
+						file.open("nodes.txt");
+						for (countI = 0; countI < netwidth; countI++) {
+							for (countII = 0; countII < netlength; countII++) {
+								file << nodetable[countI][countII] << endl;
+							}
+						}
+						file.close();
+						file.open("synapses.txt");
+						for (countI = 0; countI < netwidth; countI++) {
+							for (countII = 0; countII < netlength; countII++) {
+								for (countIII = 0; countIII < netwidth; countIII++) {
+									for (countIV = 0; countIV < netlength; countIV++) {
+										file << connectiontable[countI][countII][countIII][countIV] << endl;
+									}
+								}
+							}		
+						}
+						file.close();
 						cout << "Goodbye." << endl;
 						return 0;
 					}
