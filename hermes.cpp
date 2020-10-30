@@ -5,7 +5,10 @@
 //source node (random) - grab a random word
 //wipe node - wipe a node and replace it with a new one, then send a signal to it
 //output node - outputs
-//TODO - learning system for output control (separate AI that converts thoughts into useable sentences (classic neural net made with Q-learning)
+//switch - switches mode internal monologue (word matches in output) and comprehension synapses (word matches in input)
+//TODO - 
+//remove thinking net and all the stuff to do with the switch node
+//Q-learning in netgen program
 #include <iostream>
 #include <vector>
 #include <ctime>
@@ -15,7 +18,6 @@ using namespace std;
 int netlength;
 int netwidth;
 string island;
-string islandII;
 int countI;
 int countII;
 int countIII;
@@ -23,11 +25,14 @@ int countIV;
 vector<int> input;
 int initnodex;
 int initnodey;
-fstream tempscript;
 fstream dictionaryfile;
 fstream file;
 vector<string> dictionary;
-int newconnection;
+vector<int> trainingdata;
+int newstrength;
+int totalstrengths;
+int strengthdiff;
+int strengthdiffavg;
 int targetnodex;
 int targetnodey;
 vector<int>output;
@@ -36,6 +41,9 @@ vector<int>possiblesy;
 int nodex;
 int nodey;
 int newnode;
+int thinkingmode;
+int previousstrength;
+int draw;
 int main() {
 	srand(unsigned(time(0)));
 	cout << "Loading language." << endl;
@@ -78,7 +86,22 @@ int main() {
 			}
 		}
 	}
+	file.close();
+	cout << "Loading node data." << endl;
+	file.open("nodedata.txt");
+	for (countI = 0; countI < netwidth; countI++) {
+		for (countII = 0; countII < netlength; countII++) {
+			getline(file, island);
+			nodedata[countI][countII] = stoi(island);
+		}
+	}
+	file.close();
 	cout << "Done." << endl;
+	remove("netx.txt");
+	remove("nety.txt");
+	remove("nodedata.txt");
+	remove("synapses.txt");
+	remove("nodes.txt");
 	while (island != ".") {
 		cin >> island;
 		if (island == ":q") {
@@ -114,6 +137,14 @@ int main() {
 				}			
 			}
 			file.close();
+			cout << "Unloading node data." << endl;
+			file.open("nodedata.txt");
+			for (countI = 0; countI < netwidth; countI++) {
+				for (countII = 0; countII < netlength; countII++) {
+					file << nodedata[countI][countII] << endl;
+				}
+			}
+			file.close();
 			cout << "Goodbye." << endl;
 			return 0;
 		}
@@ -129,17 +160,19 @@ int main() {
 				dictionary.push_back(island);
 			}
 		}
-	}
+	}	
 	initnodex = (rand () % (netwidth)) + 0;
 	initnodey = (rand () % (netlength)) + 0;
 	nodex = initnodex;
 	nodey = initnodey;
+	thinkingmode = (rand () % 2) + 1;
+	output.push_back(1);
 	//SWITCH CASE FOR S FUNCTIONS, MAIN AI LOOP
 	while (1 < 2)  {
 		switch (nodetable[nodex][nodey]) {
 			case 2:
 				targetnodex = (rand () % netwidth) + 0;
-				targetnodey - (rand () % netlength) + 0;
+				targetnodey = (rand () % netlength) + 0;
 				connectiontable[nodex][nodey][targetnodex][targetnodey] = (rand () % dictionary.size()) + 0;
 				break;
 			case 3:
@@ -157,8 +190,11 @@ int main() {
 						connectiontable[targetnodex][targetnodey][countI][countII] = (rand () % dictionary.size()) + 0;
 					}
 				}
-				if (nodetable[targetnodex][targetnodey] == 3) {
-					nodedata[targetnodex][targetnodey] = (rand () % dictionary.size()) + 0;
+				switch (nodetable[targetnodex][targetnodey]) {
+					case 3:
+						nodedata[targetnodex][targetnodey] = (rand () % dictionary.size()) + 0;
+					case 7:
+						nodedata[targetnodex][targetnodey] = (rand () % 2) + 1;
 				}
 				break;
 			case 6:
@@ -204,6 +240,19 @@ int main() {
 							}		
 						}
 						file.close();
+						cout << "Unloading node data." << endl;
+						file.open("nodedata.txt");
+						for (countI = 0; countI < netwidth; countI++) {
+							for (countII = 0; countII < netlength; countII++) {
+								file << nodedata[countI][countII] << endl;
+							}
+						}
+						file.close();
+						file.open("trainingdata.txt");
+						for (countI = 0; countI < trainingdata.size(); countI++) {
+							file << trainingdata[countI] << endl;
+						}
+						file.close();
 						cout << "Goodbye." << endl;
 						return 0;
 					}
@@ -212,6 +261,7 @@ int main() {
 							for (countI = 0; countI < dictionary.size(); countI++) {
 								if (dictionary[countI] == island) {
 									input.push_back(countI);
+									trainingdata.push_back(countI);
 								}
 							}
 						}
@@ -221,23 +271,41 @@ int main() {
 					}
 				}
 				break;
+			case 7:
+				thinkingmode = nodedata[nodex][nodey];
 			default:
 				break;
 		}
-		for (countI = 0; countI < netwidth; countI++) {
-			for (countII = 0; countII < netlength; countII++) {
-				for (countIII = 0; countIII < input.size(); countIII++) {
-					if (connectiontable[nodex][nodey][countI][countII] == input[countIII]) {
-						possiblesx.push_back(countI);
-						possiblesy.push_back(countII);
+		switch (thinkingmode) {
+			case 1:
+				for (countI = 0; countI < netwidth; countI++) {
+					for (countII = 0; countII < netlength; countII++) {
+						for (countIII = 0; countIII < input.size(); countIII++) {
+							if (connectiontable[nodex][nodey][countI][countII] == input[countIII]) {
+								possiblesx.push_back(countI);
+								possiblesy.push_back(countII);
+							}
+						}
 					}
 				}
-			}
+				break;
+			case 2:
+				for (countI = 0; countI < netwidth; countI++) {
+					for (countII = 0; countII < netlength; countII++) {
+						for (countIII = 0; countIII < input.size(); countIII++) {
+							if (connectiontable[nodex][nodey][countI][countII] == output[countIII]) {
+								possiblesx.push_back(countI);
+								possiblesy.push_back(countII);
+							}
+						}
+					}
+				}
+				break;
 		}
 		if (possiblesx.size() != 0) {
-			 newnode = (rand () % possiblesx.size()) + 0;
-			 nodex = possiblesx[newnode];
-			 nodey = possiblesy[newnode];
+			newnode = (rand () % possiblesx.size()) + 0;
+			nodex = possiblesx[newnode];
+			nodey = possiblesy[newnode];
 		}
 		else {
 			nodex = (rand () % netwidth) + 0;

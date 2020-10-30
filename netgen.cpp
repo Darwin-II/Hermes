@@ -10,6 +10,7 @@ int countII;
 int countIII;
 int countIV;
 fstream file;
+ofstream outfile;
 vector <string> dictionary;
 string island;
 int main() {
@@ -19,6 +20,11 @@ int main() {
 		getline(file, island);
 		dictionary.push_back(island);
 	}
+	remove("netx.txt");
+	remove("nety.txt");
+	remove("nodedata.txt");
+	remove("synapses.txt");
+	remove("nodes.txt");
 	file.close();
 	cout << "Enter net length: ";
 	cin >> netlength;
@@ -30,10 +36,14 @@ int main() {
 	vector<vector<vector<vector<int>>>> connectiontable (netwidth, vector<vector<vector<int>>> (netlength, vector<vector<int>> (netwidth, vector<int> (netlength))));
 	for (countI = 0; countI < netwidth; countI++) {
 		for (countII = 0; countII < netlength; countII++) {
-			nodetable[countI][countII] = (rand () % 6 ) + 1;
+			nodetable[countI][countII] = (rand () % 7 ) + 1;
 			switch (nodetable[countI][countII]) {
 				case 3:
 					nodedata[countI][countII] = (rand () % dictionary.size()) + 0;
+					break;
+				case 7:
+					nodedata[countI][countII] = (rand () % 2) + 1;
+					break;
 			}
 		}
 	}
@@ -59,30 +69,38 @@ int main() {
 		}
 	}
 	cout << "Unloading net dimensions." << endl;
-	file.open("netx.txt");
-	file << netwidth;
-	file.close();
-	file.open("nety.txt");
-	file << netlength;
-	file.close();
+	outfile.open("netx.txt");
+	outfile << netwidth;
+	outfile.close();
+	outfile.open("nety.txt");
+	outfile << netlength;
+	outfile.close();
 	cout << "Unloading net." << endl;
-	file.open("nodes.txt");
+	outfile.open("nodes.txt");
 	for (countI = 0; countI < netwidth; countI++) {
 		for (countII = 0; countII < netlength; countII++) {
-			file << nodetable[countI][countII] << endl;
+			outfile << nodetable[countI][countII] << endl;
 		}
 	}
-	file.close();
-	file.open("synapses.txt");
+	outfile.close();
+	outfile.open("synapses.txt");
 	for (countI = 0; countI < netwidth; countI++) {
 		for (countII = 0; countII < netlength; countII++) {
 			for (countIII = 0; countIII < netwidth; countIII++) {
 				for (countIV = 0; countIV < netlength; countIV++) {
-					file << connectiontable[countI][countII][countIII][countIV] << endl;
+					outfile << connectiontable[countI][countII][countIII][countIV] << endl;
 				}
 			}
-		}			
+		}
 	}
-	file.close();
+	outfile.close();
+	cout << "Unloading node data." << endl;
+	outfile.open("nodedata.txt");
+	for (countI = 0; countI < netwidth; countI++) {
+		for (countII = 0; countII < netlength; countII++) {
+			outfile << nodedata[countI][countII] << endl;
+		}
+	}
+	cout << "Finished." << endl;
 	return 0;
 }
